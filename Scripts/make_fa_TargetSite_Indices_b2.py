@@ -41,8 +41,8 @@ parser.add_argument('-o', '--override', help='Flag to override existing indexes'
 parser.add_argument('-t', '--test', help="Flag to not run bowtie",
                         action='store_false')
 
-parser.add_argument('-b', '--bowtie',
-                    help='Location of Bowtie aligner; default is home drive', type=str,
+parser.add_argument('-b', '--bowtie2',
+                    help='Location of Bowtie2 aligner; default is home drive', type=str,
                     default='bowtie2-build')
 
 args = parser.parse_args()
