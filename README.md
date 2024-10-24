@@ -43,6 +43,10 @@ The oligo_file is a .csv file that contains a Oligo_ID in the first column and t
 
 Run this script first without the *-t* flag and it will show you what the actual sequences you are using to build the indices. You can then determine the porper trims using the *-s* and *-e* flags.  Once you are sure you have the right oligos.  Run with the *-t* flag which will generate the bowtie index files in the Indices folder as well as update the screen_type_index.txt
 
+###### Output:
+
+This script generates the bowtie files in the Indices folder and updates the screen_type_index.txt in the Indices folder.
+
 #### make_fa_TargetSite_Indices_b2.py
 >usage: Make index for alignment [-h] [-s STRIM] [-e ETRIM] [-n NUMS] [-o] [-t] [-b BOWTIE] oligo_file short_name full_name
 
@@ -65,17 +69,21 @@ Run this script first without the *-t* flag and it will show you what the actual
 
 Run this script first without the *-t* flag and it will show you what the actual sequences you are using to build the indices. You can then determine the porper trims using the *-s* and *-e* flags.  Once you are sure you have the right oligos.  Run with the *-t* flag which will generate the bowtie2 index files in the Indices folder as well as update the screen_type_index.txt
 
+###### Output:
+
+This script generates the bowtie2 files in the Indices folder and updates the screen_type_index.txt in the Indices folder.
+
 # Step 2: Extract UMIs and trim sgRNA and target site reads
 *This step requires umi_tools and cutadapt to be installed. This script also requires biopython package (version 1.84)*
 
 The script requires an parameter file, which is a csv with the following columns:
 >*Filename* Path and Seed for fastq file that is being used (doesn't need the R1.fastq.gz or R2.fastq.gz)\
->*Rep* Designates whether the file is from replicate 1 or 2
->*Parent* Designates whether sample is a Parent sample (field is 1) or not (field is 0)
+>*Rep* Designates whether the file is from replicate 1 or 2\
+>*Parent* Designates whether sample is a Parent sample (field is 1) or not (field is 0)\
 >*Output* Seed name for fastq that are generated.
 
-#### make_fa_sgRNA_Indices.py
->uusage: Extract UMIs and Trim Read1 and Read 2 files [-h] parameter_file output_name
+#### BEChar_extract_trim.py
+>usage: Extract UMIs and Trim Read1 and Read 2 files [-h] parameter_file output_name
 
 ###### positional arguments:
   >*parameter_file*        Path to csv containing parameters of files\
@@ -83,5 +91,89 @@ The script requires an parameter file, which is a csv with the following columns
 
 ###### optional arguments:
   >*-h, --help*            show this help message and exit
-  
-This script reates fastq files where the UMI is extracted and inserted into the Read_ID in the fastq and Read1 and Read2 are trimmed to remove common sequences. For each file, it generates two fastqs where the name is the Output Seed Name in the parameter file with either "_Locus.fastq.gz" for the target site and "_sgRNA.fastq.gz" for the sgRNA.
+
+###### Output:
+
+This script creates two fastq files per sample. The "_Locus.fastq.gz" file has the UMI extracted from Read 1 (target site) and common sequence is truncated. The "_sgRNA.fastq.gz" file has the UMI inserted in to the Read ID, and the last base is truncated off of Read 2. These files are output in the designated output folder.
+
+# Step 3: Define list of acceptable sgRNA-target site-UMI triplets based on filtering methods
+*This step requires bowtie, bowtie2, umi_tools and samtools to be installed. This script also requires biopython package (version 1.84)*
+
+The script requires the parameter file used in Step 2.
+
+#### Define_whitelist.py
+>usage: Filter Fastqs to generate Fastqs for CRISPResso [-h] parameter_file trimmed_folder output_name
+
+###### positional arguments:
+  >*parameter_file*        Path to csv containing parameters of files\
+  >*trimmed_folder*        Path to folder where UMI extracted and UMI trimmed files are located\
+  >*output_name*           Path to folder with output
+
+###### optional arguments:
+  >*-h, --help*            show this help message and exit
+
+###### Output:
+
+For each parent/replicate sample in the parameter file, this script produces the following files:
+1. "_sgRNA.map", "_sgRNA.unmapped","_Locus.map", "_Locus.unmapped" - files from the Locus and sgRNA alignments (4 files)
+2. "_Aligned.fastq.gz" - fastq where unaligned reads are removed
+3. "_Matched.fastq.gz" - fastq of matched and aligned reads only
+4. "_IDList_Aligned.csv" and "_IDList_Matched.csv" - list of Read IDs that were maintained in the fastq (2 files)
+5. "_Matched.bam", "_sorted_Matched.bam", and "_sorted_Matched.bam.bai" - alignment files needed as inputs for umitools (3 files)
+6. "_Matched_UMIGroups.tsv" - List of sgRNA-target site-UMI triplets identified in sample
+7. "_Matched_IndelWhitelist.csv" and "_Matched_PerfectWhitelist.csv" - These files contain all of the Locus/UMI pairs that pass the Indel or Perfect cutoff (2 files)
+
+# Step 4: Filter fastqs generated by other samples
+*This step requires bowtie, bowtie2, umi_tools and samtools to be installed. This script also requires biopython package (version 1.84)*
+
+These scripts require the parameter file used in Step 2.
+
+#### UMI_Filter.py
+>usage: Filter Fastqs to generate Fastqs for CRISPResso [-h] [-p NUM_PROCESSORS] parameter_file trimmed_folder whitelist_folder output_name
+
+###### positional arguments:
+  >*parameter_file*        Path to csv containing parameters of files\
+  >*trimmed_folder*        Path to folder where UMI extracted and UMI trimmed files are located\
+  >*whitelist_folder*      Path to folder where UMI whitelists are located
+  >*output_name*           Path to folder with output
+
+###### optional arguments:
+  >*-h, --help*            show this help message and exit\
+  >*-p NUM_PROCESSORS, --num_processors NUM_PROCESSORS*
+                        Number of processors to be used
+
+###### Output:
+
+For each parent/replicate sample in the parameter file, this script produces the following files:
+1. "_sgRNA.map", "_sgRNA.unmapped","_Locus.map", "_Locus.unmapped" - files from the Locus and sgRNA alignments (4 files)
+2. "_UMI_Matched_Indel.fastq.gz" - fastq file produced after all filtering
+3. "_Matched.fastq.gz" - fastq of matched and aligned reads only
+4. "_IDList_Matched.csv" and "_IDList_Matched_Indel.csv" - list of Read IDs that were maintained in the Matched and UMI_Matched_Indel fastq (2 files)
+5. "_Matched.bam", "_sorted_Matched.bam", and "_sorted_Matched.bam.bai" - alignment files needed as inputs for umitools (3 files)
+6. "_Matched_UMIGroups.tsv" - List of sgRNA-target site-UMI triplets identified in sample
+
+#### UMI_Filter_ProcComp.py
+>usage: Filter Fastqs to generate Fastqs for CRISPResso [-h] [-p NUM_PROCESSORS] parameter_file trimmed_folder whitelist_folder output_name
+
+###### positional arguments:
+  >*parameter_file*        Path to csv containing parameters of files\
+  >*trimmed_folder*        Path to folder where UMI extracted and UMI trimmed files are located\
+  >*whitelist_folder*      Path to folder where UMI whitelists are located
+  >*output_name*           Path to folder with output
+
+###### optional arguments:
+  >*-h, --help*            show this help message and exit\
+  >*-p NUM_PROCESSORS, --num_processors NUM_PROCESSORS*
+                        Number of processors to be used
+
+###### Output:
+
+The main difference is that this script from UMI_Filter.py is that is produces the fastqs for all 4 filtering methods rather than just the indel version.
+
+For each parent/replicate sample in the parameter file, this script produces the following files:
+1. "_sgRNA.map", "_sgRNA.unmapped","_Locus.map", "_Locus.unmapped" - files from the Locus and sgRNA alignments (4 files)
+2. "_UMI_Matched_Indel.fastq.gz" and "_UMI_Matched_Perf.fastq.gz" - fastq file produced after filtering on Indels or Perfect whitelists (2 files)
+3. "_Aligned.fastq.gz" and "_Matched.fastq.gz" - fastq of aligned or matched and aligned reads (2 files)
+4. "_IDList_Aligned.csv", "_IDList_Matched.csv", "_IDList_Matched_Indel.csv", and "_IDList_Matched_Perfect.csv" - list of Read IDs that were maintained in the Aligned, Matched, UMI_Matched_Indel, and UMI_Matched_Perf fastqs (4 files)
+5. "_Matched.bam", "_sorted_Matched.bam", and "_sorted_Matched.bam.bai" - alignment files needed as inputs for umitools (3 files)
+6. "_Matched_UMIGroups.tsv" - List of sgRNA-target site-UMI triplets identified in sample
