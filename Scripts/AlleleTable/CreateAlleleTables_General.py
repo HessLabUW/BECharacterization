@@ -13,7 +13,7 @@ import time
 import glob
 import zipfile
 
-parser = argparse.ArgumentParser(description='Extracts Allele Frequency Tables and concatenates them')
+parser = argparse.ArgumentParser('Extracts Allele Frequency Tables and concatenates them')
 
 # Non-optional arguments: The files containing counts, as well as an output
 parser.add_argument('name', help='Path and Name for output file.', type=str)

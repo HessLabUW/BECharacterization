@@ -20,7 +20,7 @@ def norm_per_reads(row,total_read_table):
   
   return norm_percent
 
-parser = argparse.ArgumentParser(description='Extracts Allele Frequency Tables and concatenates them')
+parser = argparse.ArgumentParser(description='Remove single read alleles and renormalize frequencies')
 
 # Non-optional arguments: The files containing counts, as well as an output
 parser.add_argument('name', help='Path and folder for output file.', type=str)
