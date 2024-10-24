@@ -309,7 +309,7 @@ _propDiff.tsv has the following columns:
 31. propRawDiff - mean frequency after normalization to Parent
 32. propDiff - propRawDiff but frequencies below 0.5% are set to 0.
 
-_Subs.tsv have the same columns as _propDiff with one additional column (#33) and changes to two other columns:
-6. substitution_positions - This is a list in the _propDiff, but this is a single value for a specific substition in this table
-7. substitution_values - This is a list in the _propDiff, but this is a single value for a specific substition in this table
-33. refBase - This is the reference (starting) base at the position that is being mutated
+_Subs.tsv have the same columns as _propDiff with one additional column (#33) and changes to two other columns:\
+6. substitution_positions - This is a list in the _propDiff, but this is a single value for a specific substition in this table\
+7. substitution_values - This is a list in the _propDiff, but this is a single value for a specific substition in this table\
+33. refBase - This is the reference (starting) base at the position that is being mutated\
